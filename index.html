@@ -1,0 +1,1810 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+  <title>ばめんクイズ</title>
+  <script id="embedded-data">window.EMBEDDED_DATA = null;</script>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: 'Hiragino Maru Gothic Pro', 'Rounded Mplus 1c', sans-serif;
+      background: #fff9f0;
+      min-height: 100vh;
+      overflow-x: hidden;
+      -webkit-user-select: none;
+      user-select: none;
+    }
+
+    /* ======== ヘッダー ======== */
+    #app-header {
+      background: linear-gradient(135deg, #ff9a3c, #ff6b6b);
+      padding: 16px 20px;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+    }
+    #app-header h1 {
+      color: white;
+      font-size: 1.6rem;
+      font-weight: 900;
+      letter-spacing: 0.05em;
+      text-shadow: 2px 2px 4px rgba(0,0,0,0.2);
+    }
+    #back-btn {
+      background: rgba(255,255,255,0.3);
+      border: none;
+      border-radius: 50%;
+      width: 44px; height: 44px;
+      font-size: 1.4rem;
+      cursor: pointer;
+      display: none;
+      align-items: center;
+      justify-content: center;
+      color: white;
+      flex-shrink: 0;
+    }
+    #back-btn.visible { display: flex; }
+
+    /* ======== 画面共通 ======== */
+    .screen {
+      display: none;
+      padding: 24px 20px;
+      max-width: 900px;
+      margin: 0 auto;
+    }
+    .screen.active { display: block; }
+
+    /* ======== ホーム画面 ======== */
+    #home-screen {
+      display: none;
+      text-align: center;
+      padding-top: 40px;
+    }
+    #home-screen.active { display: block; }
+
+    .home-mascot {
+      font-size: 5rem;
+      margin-bottom: 16px;
+      animation: bounce 2s infinite;
+    }
+    @keyframes bounce {
+      0%,100% { transform: translateY(0); }
+      50% { transform: translateY(-12px); }
+    }
+
+    .home-title {
+      font-size: 2rem;
+      font-weight: 900;
+      color: #ff6b6b;
+      margin-bottom: 8px;
+    }
+    .home-sub {
+      font-size: 1.1rem;
+      color: #888;
+      margin-bottom: 40px;
+    }
+
+    .home-buttons {
+      display: flex;
+      flex-direction: column;
+      gap: 20px;
+      max-width: 400px;
+      margin: 0 auto;
+    }
+
+    .big-btn {
+      padding: 24px 32px;
+      border: none;
+      border-radius: 20px;
+      font-size: 1.5rem;
+      font-weight: 900;
+      cursor: pointer;
+      box-shadow: 0 6px 0 rgba(0,0,0,0.15);
+      transition: transform 0.1s, box-shadow 0.1s;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 12px;
+      letter-spacing: 0.05em;
+    }
+    .big-btn:active {
+      transform: translateY(4px);
+      box-shadow: 0 2px 0 rgba(0,0,0,0.15);
+    }
+    .btn-student {
+      background: linear-gradient(135deg, #4ecdc4, #2bc0b4);
+      color: white;
+    }
+    .btn-teacher {
+      background: linear-gradient(135deg, #a8edea, #fed6e3);
+      color: #555;
+    }
+    .btn-icon { font-size: 2rem; }
+
+    /* ======== 先生モード ======== */
+    .section-title {
+      font-size: 1.4rem;
+      font-weight: 900;
+      color: #555;
+      margin-bottom: 20px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    /* 問題リスト */
+    #question-list {
+      display: flex;
+      flex-direction: column;
+      gap: 14px;
+      margin-bottom: 24px;
+    }
+
+    .question-card {
+      background: white;
+      border-radius: 16px;
+      padding: 16px 20px;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+      display: flex;
+      align-items: center;
+      gap: 16px;
+      border: 3px solid transparent;
+      transition: border-color 0.2s;
+    }
+    .question-card:hover { border-color: #ff9a3c; }
+
+    .question-card-thumb {
+      width: 72px; height: 72px;
+      border-radius: 12px;
+      object-fit: cover;
+      background: #f0f0f0;
+      flex-shrink: 0;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 2rem;
+      overflow: hidden;
+    }
+    .question-card-thumb img {
+      width: 100%; height: 100%;
+      object-fit: cover;
+    }
+
+    .question-card-info {
+      flex: 1;
+    }
+    .question-card-num {
+      font-size: 0.85rem;
+      color: #aaa;
+      margin-bottom: 4px;
+    }
+    .question-card-title {
+      font-size: 1.1rem;
+      font-weight: 700;
+      color: #333;
+    }
+    .question-card-choices {
+      font-size: 0.9rem;
+      color: #888;
+      margin-top: 4px;
+    }
+
+    .question-card-actions {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+
+    .icon-btn {
+      width: 44px; height: 44px;
+      border: none;
+      border-radius: 10px;
+      font-size: 1.1rem;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: transform 0.1s;
+      touch-action: manipulation;
+    }
+    .icon-btn:active { transform: scale(0.9); }
+    .btn-edit { background: #fff3cd; color: #856404; }
+    .btn-delete { background: #f8d7da; color: #842029; }
+
+    .add-question-btn {
+      width: 100%;
+      padding: 18px;
+      background: linear-gradient(135deg, #ff9a3c, #ff6b6b);
+      color: white;
+      border: none;
+      border-radius: 16px;
+      font-size: 1.2rem;
+      font-weight: 700;
+      cursor: pointer;
+      box-shadow: 0 4px 0 rgba(0,0,0,0.12);
+      transition: transform 0.1s, box-shadow 0.1s;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+    }
+    .add-question-btn:active {
+      transform: translateY(3px);
+      box-shadow: 0 1px 0 rgba(0,0,0,0.12);
+    }
+
+    /* 空の状態 */
+    .empty-state {
+      text-align: center;
+      padding: 40px 20px;
+      color: #aaa;
+    }
+    .empty-state .empty-icon { font-size: 4rem; margin-bottom: 12px; }
+    .empty-state p { font-size: 1rem; }
+
+    /* ======== 問題編集フォーム ======== */
+    .form-group {
+      margin-bottom: 24px;
+    }
+    .form-label {
+      font-size: 1rem;
+      font-weight: 700;
+      color: #555;
+      margin-bottom: 10px;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .image-upload-area {
+      border: 3px dashed #ddd;
+      border-radius: 16px;
+      padding: 20px;
+      text-align: center;
+      cursor: pointer;
+      transition: border-color 0.2s, background 0.2s;
+      position: relative;
+      background: #fafafa;
+      min-height: 180px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-direction: column;
+      gap: 8px;
+    }
+    .image-upload-area:hover,
+    .image-upload-area.dragover {
+      border-color: #ff9a3c;
+      background: #fff8f0;
+    }
+    .image-upload-area img {
+      max-width: 100%;
+      max-height: 240px;
+      border-radius: 12px;
+      object-fit: contain;
+    }
+    .image-upload-area input[type=file] {
+      position: absolute;
+      inset: 0;
+      opacity: 0;
+      cursor: pointer;
+    }
+    .upload-placeholder { color: #aaa; }
+    .upload-placeholder .upload-icon { font-size: 3rem; }
+    .upload-placeholder p { font-size: 0.95rem; }
+
+    /* 選択肢エリア */
+    #choices-container {
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+
+    .choice-row {
+      background: white;
+      border-radius: 14px;
+      padding: 14px 16px;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .choice-correct-radio {
+      width: 28px; height: 28px;
+      accent-color: #4ecdc4;
+      cursor: pointer;
+      flex-shrink: 0;
+    }
+
+    .choice-image-thumb {
+      width: 60px; height: 60px;
+      border-radius: 10px;
+      background: #f5f5f5;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 1.4rem;
+      flex-shrink: 0;
+      overflow: hidden;
+      cursor: pointer;
+      border: 2px dashed #ddd;
+      position: relative;
+    }
+    .choice-image-thumb img {
+      width: 100%; height: 100%;
+      object-fit: cover;
+    }
+    .choice-image-thumb input[type=file] {
+      position: absolute;
+      inset: 0;
+      opacity: 0;
+      cursor: pointer;
+    }
+
+    .choice-text-input {
+      flex: 1;
+      padding: 12px 16px;
+      border: 2px solid #e0e0e0;
+      border-radius: 12px;
+      font-size: 1.2rem;
+      font-family: inherit;
+      outline: none;
+      transition: border-color 0.2s;
+    }
+    .choice-text-input:focus { border-color: #ff9a3c; }
+
+    .choice-remove-btn {
+      background: #f8d7da;
+      color: #842029;
+      border: none;
+      border-radius: 10px;
+      width: 36px; height: 36px;
+      font-size: 1rem;
+      cursor: pointer;
+      flex-shrink: 0;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .add-choice-btn {
+      padding: 12px;
+      background: #f0f9f8;
+      color: #2bc0b4;
+      border: 2px dashed #4ecdc4;
+      border-radius: 14px;
+      font-size: 1rem;
+      font-weight: 700;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 6px;
+      transition: background 0.2s;
+    }
+    .add-choice-btn:hover { background: #e0f5f4; }
+
+    .correct-hint {
+      font-size: 0.85rem;
+      color: #888;
+      margin-bottom: 8px;
+    }
+
+    /* 保存ボタン */
+    .save-btn {
+      width: 100%;
+      padding: 18px;
+      background: linear-gradient(135deg, #4ecdc4, #2bc0b4);
+      color: white;
+      border: none;
+      border-radius: 16px;
+      font-size: 1.2rem;
+      font-weight: 700;
+      cursor: pointer;
+      box-shadow: 0 4px 0 rgba(0,0,0,0.12);
+      margin-top: 8px;
+      transition: transform 0.1s, box-shadow 0.1s;
+    }
+    .save-btn:active {
+      transform: translateY(3px);
+      box-shadow: 0 1px 0 rgba(0,0,0,0.12);
+    }
+
+    /* ======== 生徒クイズ画面 ======== */
+    #quiz-screen {
+      display: none;
+    }
+    #quiz-screen.active { display: block; }
+
+    /* 問題選択 */
+    .quiz-select-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
+      gap: 16px;
+    }
+
+    .quiz-select-card {
+      background: white;
+      border-radius: 20px;
+      padding: 20px 16px;
+      text-align: center;
+      box-shadow: 0 4px 16px rgba(0,0,0,0.1);
+      cursor: pointer;
+      border: 3px solid transparent;
+      transition: border-color 0.2s, transform 0.1s;
+    }
+    .quiz-select-card:active {
+      transform: scale(0.97);
+      border-color: #4ecdc4;
+    }
+    .quiz-select-card .card-thumb {
+      width: 100%;
+      aspect-ratio: 1;
+      border-radius: 14px;
+      background: #f0f0f0;
+      margin-bottom: 12px;
+      overflow: hidden;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 2.5rem;
+    }
+    .quiz-select-card .card-thumb img {
+      width: 100%; height: 100%;
+      object-fit: cover;
+    }
+    .quiz-select-card .card-num {
+      font-size: 0.85rem;
+      color: #aaa;
+    }
+    .quiz-select-card .card-title {
+      font-size: 1rem;
+      font-weight: 700;
+      color: #333;
+    }
+
+    /* ======== クイズ問題画面 ======== */
+    #question-screen {
+      display: none;
+    }
+    #question-screen.active { display: block; }
+
+    .progress-bar {
+      background: #f0f0f0;
+      border-radius: 99px;
+      height: 10px;
+      margin-bottom: 20px;
+      overflow: hidden;
+    }
+    .progress-fill {
+      background: linear-gradient(90deg, #4ecdc4, #ff9a3c);
+      height: 100%;
+      border-radius: 99px;
+      transition: width 0.5s;
+    }
+
+    .scene-container {
+      background: white;
+      border-radius: 20px;
+      padding: 16px;
+      box-shadow: 0 4px 16px rgba(0,0,0,0.1);
+      margin-bottom: 24px;
+      text-align: center;
+    }
+    .scene-label {
+      font-size: 0.9rem;
+      color: #aaa;
+      margin-bottom: 8px;
+      font-weight: 700;
+    }
+    .scene-img-wrap {
+      width: 100%;
+      max-height: 300px;
+      border-radius: 14px;
+      overflow: hidden;
+      background: #f5f5f5;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      min-height: 200px;
+    }
+    .scene-img-wrap img {
+      max-width: 100%;
+      max-height: 300px;
+      object-fit: contain;
+    }
+    .scene-no-img {
+      font-size: 4rem;
+      color: #ccc;
+    }
+
+    /* ドロップゾーン */
+    .drop-zone-area {
+      margin-bottom: 28px;
+    }
+    .drop-zone-label {
+      font-size: 1rem;
+      font-weight: 700;
+      color: #555;
+      text-align: center;
+      margin-bottom: 12px;
+    }
+    .drop-zone {
+      min-height: 90px;
+      border: 4px dashed #b2ebf2;
+      border-radius: 20px;
+      background: #e0f7fa;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: all 0.2s;
+      font-size: 1rem;
+      color: #80cbc4;
+      font-weight: 700;
+      position: relative;
+    }
+    .drop-zone.over {
+      border-color: #26c6da;
+      background: #b2ebf2;
+      transform: scale(1.02);
+    }
+    .drop-zone.has-item {
+      border-style: solid;
+      border-color: #4ecdc4;
+      background: white;
+    }
+    .dropped-chip {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding: 14px 24px;
+      background: linear-gradient(135deg, #4ecdc4, #2bc0b4);
+      color: white;
+      border-radius: 50px;
+      font-size: 1.3rem;
+      font-weight: 700;
+      box-shadow: 0 4px 12px rgba(78,205,196,0.4);
+    }
+    .dropped-chip img {
+      width: 40px; height: 40px;
+      border-radius: 8px;
+      object-fit: cover;
+    }
+
+    /* 選択肢エリア */
+    .choices-label {
+      font-size: 1rem;
+      font-weight: 700;
+      color: #555;
+      text-align: center;
+      margin-bottom: 14px;
+    }
+    .choices-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+      gap: 14px;
+      margin-bottom: 24px;
+    }
+
+    .choice-chip {
+      background: white;
+      border-radius: 16px;
+      padding: 16px 12px;
+      text-align: center;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+      cursor: grab;
+      border: 3px solid transparent;
+      transition: transform 0.1s, box-shadow 0.1s, opacity 0.2s;
+      font-size: 1.2rem;
+      font-weight: 700;
+      color: #333;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 8px;
+      min-height: 90px;
+      justify-content: center;
+      touch-action: none;
+    }
+    .choice-chip:active { cursor: grabbing; }
+    .choice-chip.dragging {
+      opacity: 0.4;
+      transform: scale(0.95);
+    }
+    .choice-chip.used {
+      opacity: 0.3;
+      pointer-events: none;
+    }
+    .choice-chip img {
+      width: 60px; height: 60px;
+      border-radius: 10px;
+      object-fit: cover;
+    }
+    .choice-chip:nth-child(1) { border-color: #ffb347; background: #fff8ee; }
+    .choice-chip:nth-child(2) { border-color: #87ceeb; background: #f0f8ff; }
+    .choice-chip:nth-child(3) { border-color: #98fb98; background: #f0fff0; }
+    .choice-chip:nth-child(4) { border-color: #dda0dd; background: #fdf0fd; }
+
+    /* 答え合わせボタン */
+    .check-btn {
+      width: 100%;
+      padding: 20px;
+      background: linear-gradient(135deg, #ff9a3c, #ff6b6b);
+      color: white;
+      border: none;
+      border-radius: 20px;
+      font-size: 1.4rem;
+      font-weight: 900;
+      cursor: pointer;
+      box-shadow: 0 6px 0 rgba(0,0,0,0.15);
+      transition: transform 0.1s, box-shadow 0.1s;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 10px;
+      letter-spacing: 0.05em;
+    }
+    .check-btn:active {
+      transform: translateY(4px);
+      box-shadow: 0 2px 0 rgba(0,0,0,0.15);
+    }
+    .check-btn:disabled {
+      background: #ccc;
+      box-shadow: 0 4px 0 #aaa;
+      cursor: not-allowed;
+    }
+
+    /* ======== 結果 & ロールプレイ画面 ======== */
+    #result-screen {
+      display: none;
+    }
+    #result-screen.active { display: block; }
+
+    .result-badge {
+      text-align: center;
+      margin-bottom: 24px;
+    }
+    .result-badge .badge-icon {
+      font-size: 5rem;
+      display: block;
+      animation: pop 0.5s cubic-bezier(0.36,0.07,0.19,0.97);
+    }
+    @keyframes pop {
+      0% { transform: scale(0); }
+      70% { transform: scale(1.2); }
+      100% { transform: scale(1); }
+    }
+    .result-badge .badge-text {
+      font-size: 1.6rem;
+      font-weight: 900;
+      margin-top: 8px;
+    }
+    .correct-text { color: #ff6b6b; }
+    .wrong-text { color: #888; }
+
+    /* ロールプレイ台本 */
+    .roleplay-card {
+      background: white;
+      border-radius: 24px;
+      overflow: hidden;
+      box-shadow: 0 6px 24px rgba(0,0,0,0.12);
+      margin-bottom: 24px;
+    }
+    .roleplay-header {
+      background: linear-gradient(135deg, #ff9a3c, #ff6b6b);
+      padding: 14px 20px;
+      color: white;
+      font-size: 1rem;
+      font-weight: 900;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .roleplay-scene {
+      padding: 16px;
+      border-bottom: 2px dashed #f0f0f0;
+    }
+    .roleplay-scene img {
+      width: 100%;
+      max-height: 260px;
+      object-fit: contain;
+      border-radius: 14px;
+    }
+    .roleplay-scene-label {
+      font-size: 0.9rem;
+      color: #aaa;
+      text-align: center;
+      margin-bottom: 8px;
+      font-weight: 700;
+    }
+
+    .roleplay-answer {
+      padding: 20px;
+    }
+    .roleplay-answer-label {
+      font-size: 0.9rem;
+      color: #aaa;
+      font-weight: 700;
+      margin-bottom: 12px;
+    }
+    .roleplay-speech {
+      display: flex;
+      align-items: center;
+      gap: 16px;
+    }
+    .speech-avatar {
+      width: 60px; height: 60px;
+      background: #fff3e0;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 2rem;
+      flex-shrink: 0;
+      border: 3px solid #ffcc80;
+    }
+    .speech-bubble {
+      background: #fff8e1;
+      border: 3px solid #ffcc80;
+      border-radius: 20px 20px 20px 4px;
+      padding: 14px 20px;
+      font-size: 1.4rem;
+      font-weight: 900;
+      color: #555;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      flex: 1;
+    }
+    .speech-bubble img {
+      width: 50px; height: 50px;
+      border-radius: 8px;
+      object-fit: cover;
+    }
+    .speech-bubble.correct-answer {
+      border-color: #4ecdc4;
+      background: #e0f7fa;
+      color: #00796b;
+    }
+    .speech-bubble.wrong-answer {
+      border-color: #ef9a9a;
+      background: #ffebee;
+    }
+
+    .correct-answer-row {
+      margin-top: 16px;
+      padding: 14px 20px;
+      background: #f0fff0;
+      border-radius: 14px;
+      border: 2px solid #98fb98;
+    }
+    .correct-answer-label {
+      font-size: 0.9rem;
+      color: #4caf50;
+      font-weight: 700;
+      margin-bottom: 8px;
+      display: flex;
+      align-items: center;
+      gap: 4px;
+    }
+    .correct-answer-text {
+      font-size: 1.2rem;
+      font-weight: 700;
+      color: #2e7d32;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .correct-answer-text img {
+      width: 40px; height: 40px;
+      border-radius: 8px;
+      object-fit: cover;
+    }
+
+    .result-buttons {
+      display: flex;
+      flex-direction: column;
+      gap: 14px;
+    }
+    .retry-btn {
+      padding: 18px;
+      background: linear-gradient(135deg, #ff9a3c, #ff6b6b);
+      color: white;
+      border: none;
+      border-radius: 16px;
+      font-size: 1.1rem;
+      font-weight: 700;
+      cursor: pointer;
+      box-shadow: 0 4px 0 rgba(0,0,0,0.12);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+    }
+    .retry-btn:active { transform: translateY(3px); }
+    .home-return-btn {
+      padding: 16px;
+      background: white;
+      color: #888;
+      border: 2px solid #ddd;
+      border-radius: 16px;
+      font-size: 1rem;
+      font-weight: 700;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+    }
+
+    /* ドラッグ中ゴースト */
+    #drag-ghost {
+      position: fixed;
+      pointer-events: none;
+      z-index: 9999;
+      background: linear-gradient(135deg, #4ecdc4, #2bc0b4);
+      color: white;
+      padding: 14px 20px;
+      border-radius: 16px;
+      font-size: 1.2rem;
+      font-weight: 700;
+      box-shadow: 0 8px 24px rgba(0,0,0,0.3);
+      display: none;
+      align-items: center;
+      gap: 10px;
+      transform: translate(-50%, -50%) rotate(4deg);
+      transition: none;
+      max-width: 200px;
+    }
+    #drag-ghost img {
+      width: 40px; height: 40px;
+      border-radius: 8px;
+      object-fit: cover;
+    }
+
+    /* ======== トースト通知 ======== */
+    #toast {
+      position: fixed;
+      bottom: 40px;
+      left: 50%;
+      transform: translateX(-50%) translateY(100px);
+      background: #333;
+      color: white;
+      padding: 14px 28px;
+      border-radius: 50px;
+      font-size: 1rem;
+      font-weight: 700;
+      z-index: 9998;
+      transition: transform 0.3s;
+      white-space: nowrap;
+    }
+    #toast.show { transform: translateX(-50%) translateY(0); }
+
+    /* ======== モーダル ======== */
+    #modal-overlay {
+      position: fixed;
+      inset: 0;
+      background: rgba(0,0,0,0.5);
+      z-index: 1000;
+      display: none;
+      align-items: center;
+      justify-content: center;
+      padding: 20px;
+    }
+    #modal-overlay.open { display: flex; }
+    .modal-box {
+      background: white;
+      border-radius: 24px;
+      padding: 32px 28px;
+      text-align: center;
+      max-width: 380px;
+      width: 100%;
+      box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+    }
+    .modal-icon { font-size: 3rem; margin-bottom: 12px; }
+    .modal-title {
+      font-size: 1.3rem;
+      font-weight: 900;
+      color: #333;
+      margin-bottom: 8px;
+    }
+    .modal-body {
+      font-size: 1rem;
+      color: #666;
+      margin-bottom: 24px;
+    }
+    .modal-buttons {
+      display: flex;
+      gap: 12px;
+    }
+    .modal-btn-cancel,
+    .modal-btn-ok {
+      flex: 1;
+      padding: 14px;
+      border: none;
+      border-radius: 14px;
+      font-size: 1rem;
+      font-weight: 700;
+      cursor: pointer;
+    }
+    .modal-btn-cancel {
+      background: #f0f0f0;
+      color: #666;
+    }
+    .modal-btn-ok {
+      background: linear-gradient(135deg, #ff9a3c, #ff6b6b);
+      color: white;
+    }
+
+    /* セーフエリア対応 */
+    @supports (padding-bottom: env(safe-area-inset-bottom)) {
+      body { padding-bottom: env(safe-area-inset-bottom); }
+    }
+  </style>
+</head>
+<body>
+
+<!-- ヘッダー -->
+<div id="app-header">
+  <button id="back-btn" onclick="goBack()">←</button>
+  <h1 id="header-title">ばめんクイズ 🌟</h1>
+</div>
+
+<!-- ドラッグゴースト -->
+<div id="drag-ghost"></div>
+
+<!-- トースト -->
+<div id="toast"></div>
+
+<!-- 削除確認モーダル -->
+<div id="modal-overlay">
+  <div class="modal-box">
+    <div class="modal-icon">🗑️</div>
+    <div class="modal-title">もんだいをけします</div>
+    <div class="modal-body">このもんだいをけしますか？<br>もとにもどせません。</div>
+    <div class="modal-buttons">
+      <button class="modal-btn-cancel" onclick="closeModal()">やめる</button>
+      <button class="modal-btn-ok" id="modal-ok-btn" onclick="executeDelete()">けす</button>
+    </div>
+  </div>
+</div>
+
+<!-- ======== ホーム画面 ======== -->
+<div id="home-screen" class="screen active">
+  <div class="home-mascot">🎭</div>
+  <div class="home-title">ばめんクイズ</div>
+  <div class="home-sub">どちらかをえらんでね</div>
+  <div class="home-buttons">
+    <button class="big-btn btn-teacher" onclick="showTeacherMode()">
+      <span class="btn-icon">🧑‍🏫</span>
+      <span>せんせい</span>
+    </button>
+    <button class="big-btn btn-student" onclick="showQuizSelect()">
+      <span class="btn-icon">🧒</span>
+      <span>せいと（ためす）</span>
+    </button>
+  </div>
+</div>
+
+<!-- ======== 先生モード：問題一覧 ======== -->
+<div id="teacher-screen" class="screen">
+  <div class="section-title">✏️ もんだいリスト</div>
+  <div id="question-list"></div>
+  <button class="add-question-btn" onclick="showEditForm(-1)">
+    <span>➕</span> あたらしいもんだいをつくる
+  </button>
+  <button class="save-btn" style="background: linear-gradient(135deg, #667eea, #764ba2); margin-top:16px;" onclick="publishToGist()">
+    🔗 URLをかきだす（せいとにくばる）
+  </button>
+  <button class="home-return-btn" style="margin-top:10px;" onclick="setGithubToken()">
+    ⚙️ GitHubトークンをせってい
+  </button>
+</div>
+
+<!-- ======== URL書き出し画面 ======== -->
+<div id="export-screen" class="screen">
+  <div class="section-title">🔗 せいとにくばるURL</div>
+  <div class="correct-hint" style="font-size:1rem; line-height:1.7; margin-bottom:16px;">
+    したのみじかいURLをコピーして、メッセージやAirDropでせいとにおくってね。<br>
+    せいとはURLをSafariでひらくだけでクイズができます。<br>
+    （ネットせつぞくがひつようです）
+  </div>
+  <div id="export-size-info" style="text-align:center; font-weight:700; margin-bottom:12px;"></div>
+  <textarea id="export-url-text" readonly
+    style="width:100%; height:140px; padding:14px; border:2px solid #e0e0e0; border-radius:14px; font-size:0.8rem; font-family:monospace; resize:none; outline:none; margin-bottom:16px;"></textarea>
+  <button class="save-btn" onclick="copyExportUrl()">📋 URLをコピーする</button>
+</div>
+
+<!-- ======== よみこみ中画面 ======== -->
+<div id="loading-screen" class="screen" style="text-align:center; padding-top:60px;">
+  <div class="home-mascot">⏳</div>
+  <div id="loading-msg" style="font-size:1.3rem; font-weight:900; color:#888;">よみこみちゅう…</div>
+</div>
+
+<!-- ======== 先生モード：問題編集 ======== -->
+<div id="edit-screen" class="screen">
+  <div class="section-title" id="edit-screen-title">✏️ もんだいをつくる</div>
+
+  <!-- タイトル -->
+  <div class="form-group">
+    <div class="form-label">📝 もんだいのタイトル</div>
+    <input type="text" id="question-title-input" class="choice-text-input"
+      placeholder="タイトルをにゅうりょく（れい：あいさつのばめん）"
+      style="width:100%; font-size:1.1rem;">
+  </div>
+
+  <!-- 場面画像 -->
+  <div class="form-group">
+    <div class="form-label">🖼️ ばめんのがぞう</div>
+    <div class="image-upload-area" id="scene-upload-area">
+      <input type="file" id="scene-file-input" accept="image/*" onchange="handleSceneUpload(event)">
+      <div class="upload-placeholder" id="scene-placeholder">
+        <div class="upload-icon">📷</div>
+        <p>がぞうをえらぶ</p>
+      </div>
+      <img id="scene-preview" style="display:none">
+    </div>
+  </div>
+
+  <!-- 選択肢 -->
+  <div class="form-group">
+    <div class="form-label">💬 えらびかた（せんたくし）</div>
+    <div class="correct-hint">✅ のチェックで「ただしいこたえ」をえらんでね</div>
+    <div id="choices-container"></div>
+    <button class="add-choice-btn" onclick="addChoiceRow()">
+      ➕ せんたくしをふやす
+    </button>
+  </div>
+
+  <button class="save-btn" onclick="saveQuestion()">💾 もんだいをほぞんする</button>
+</div>
+
+<!-- ======== クイズ問題選択 ======== -->
+<div id="quiz-screen" class="screen">
+  <div class="section-title">🌟 もんだいをえらんでね</div>
+  <div id="quiz-select-grid" class="quiz-select-grid"></div>
+</div>
+
+<!-- ======== クイズ問題 ======== -->
+<div id="question-screen" class="screen">
+  <div class="progress-bar">
+    <div class="progress-fill" id="progress-fill" style="width:0%"></div>
+  </div>
+  <div class="scene-container">
+    <div class="scene-label">📸 このばめんをみてね</div>
+    <div class="scene-img-wrap">
+      <img id="q-scene-img" src="" alt="" style="display:none">
+      <div class="scene-no-img" id="q-scene-no-img">🎭</div>
+    </div>
+  </div>
+
+  <div class="drop-zone-area">
+    <div class="drop-zone-label">⬇️ こたえをここにおとしてね</div>
+    <div class="drop-zone" id="drop-zone">
+      <span id="drop-hint">ここにドラッグしてね</span>
+    </div>
+  </div>
+
+  <div class="choices-label">👆 したからえらんでドラッグしよう</div>
+  <div class="choices-grid" id="choices-grid"></div>
+
+  <button class="check-btn" id="check-btn" onclick="checkAnswer()" disabled>
+    <span>✅</span> こたえをみる
+  </button>
+</div>
+
+<!-- ======== 結果・ロールプレイ画面 ======== -->
+<div id="result-screen" class="screen">
+  <div class="result-badge">
+    <span class="badge-icon" id="result-icon"></span>
+    <div class="badge-text" id="result-text"></div>
+  </div>
+
+  <div class="roleplay-card">
+    <div class="roleplay-header">🎭 ロールプレイのだいほん</div>
+    <div class="roleplay-scene">
+      <div class="roleplay-scene-label">📸 ばめん</div>
+      <img id="result-scene-img" src="" alt="" style="display:none; width:100%; max-height:240px; object-fit:contain; border-radius:14px;">
+      <div id="result-scene-no-img" style="text-align:center; font-size:3rem; padding:16px;">🎭</div>
+    </div>
+    <div class="roleplay-answer">
+      <div class="roleplay-answer-label">💬 あなたのこたえ</div>
+      <div class="roleplay-speech">
+        <div class="speech-avatar">🧑</div>
+        <div class="speech-bubble" id="speech-bubble">
+          <span id="speech-text"></span>
+          <img id="speech-img" style="display:none" alt="">
+        </div>
+      </div>
+      <div class="correct-answer-row" id="correct-answer-row" style="display:none">
+        <div class="correct-answer-label">⭐ ただしいこたえ</div>
+        <div class="correct-answer-text" id="correct-answer-display"></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="result-buttons">
+    <button class="retry-btn" onclick="retryQuestion()">🔄 もういちどやる</button>
+    <button class="retry-btn" style="background: linear-gradient(135deg, #4ecdc4, #2bc0b4);" onclick="showQuizSelect()">📋 もんだいにもどる</button>
+    <button class="home-return-btn" onclick="showHome()">🏠 ホームにもどる</button>
+  </div>
+</div>
+
+<script>
+// ======== データ管理 ========
+const STORAGE_KEY = 'bamen_quiz_v1';
+
+function loadData() {
+  try {
+    const raw = localStorage.getItem(STORAGE_KEY);
+    return raw ? JSON.parse(raw) : { questions: [] };
+  } catch { return { questions: [] }; }
+}
+
+function saveData(data) {
+  localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
+}
+
+let appData = loadData();
+let currentEditIndex = -1; // -1 = 新規
+let currentQuestionIndex = 0;
+let selectedChoiceId = null;
+let deleteTargetIndex = -1;
+
+// ======== 画面ナビ ========
+let screenStack = [];
+
+function showScreen(id, title, showBack = true) {
+  document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+  document.getElementById(id).classList.add('active');
+  document.getElementById('header-title').textContent = title;
+  const backBtn = document.getElementById('back-btn');
+  if (showBack) backBtn.classList.add('visible');
+  else backBtn.classList.remove('visible');
+}
+
+function goBack() {
+  if (screenStack.length === 0) { showHome(); return; }
+  const prev = screenStack.pop();
+  prev();
+}
+
+function showHome() {
+  screenStack = [];
+  showScreen('home-screen', 'ばめんクイズ 🌟', false);
+  document.getElementById('home-screen').classList.add('active');
+}
+
+// ======== 先生モード ========
+function showTeacherMode() {
+  screenStack = [showHome];
+  renderQuestionList();
+  showScreen('teacher-screen', '✏️ もんだいをつくる');
+}
+
+function renderQuestionList() {
+  const list = document.getElementById('question-list');
+  const qs = appData.questions;
+  if (qs.length === 0) {
+    list.innerHTML = `<div class="empty-state">
+      <div class="empty-icon">📝</div>
+      <p>まだもんだいがありません<br>したのボタンでつくってね</p>
+    </div>`;
+    return;
+  }
+  list.innerHTML = qs.map((q, i) => {
+    const choiceCount = q.choices ? q.choices.length : 0;
+    const thumbHtml = q.sceneImage
+      ? `<div class="question-card-thumb"><img src="${q.sceneImage}" alt=""></div>`
+      : `<div class="question-card-thumb">🎭</div>`;
+    return `<div class="question-card">
+      ${thumbHtml}
+      <div class="question-card-info">
+        <div class="question-card-num">もんだい ${i + 1}</div>
+        <div class="question-card-title">${q.title || 'タイトルなし'}</div>
+        <div class="question-card-choices">せんたくし: ${choiceCount}こ</div>
+      </div>
+      <div class="question-card-actions">
+        <button class="icon-btn btn-edit" onclick="showEditForm(${i})">✏️</button>
+        <button class="icon-btn btn-delete" onclick="confirmDelete(${i})">🗑️</button>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+function confirmDelete(index) {
+  deleteTargetIndex = index;
+  document.getElementById('modal-overlay').classList.add('open');
+}
+
+function executeDelete() {
+  if (deleteTargetIndex < 0) return;
+  appData.questions.splice(deleteTargetIndex, 1);
+  deleteTargetIndex = -1;
+  closeModal();
+  renderQuestionList();
+  try { saveData(appData); showToast('もんだいをけしました'); }
+  catch (e) { showToast('ほぞんにしっぱいしました'); }
+}
+
+function closeModal() {
+  document.getElementById('modal-overlay').classList.remove('open');
+}
+
+// ======== GitHub トークン設定 ========
+function setGithubToken() {
+  const cur = localStorage.getItem('gh_token') || '';
+  const t = prompt('GitHubの「トークン」をはりつけてね\n（gist のきょかがついたもの）', cur);
+  if (t === null) return;
+  const v = t.trim();
+  if (v) { localStorage.setItem('gh_token', v); showToast('トークンをほぞんしました ✅'); }
+  else { localStorage.removeItem('gh_token'); showToast('トークンをけしました'); }
+}
+
+// ======== URL書き出し（GitHub Gist にアップロードして短いURLを作る） ========
+async function publishToGist() {
+  if (appData.questions.length === 0) { showToast('もんだいがありません'); return; }
+  let token = localStorage.getItem('gh_token');
+  if (!token) { showToast('さいしょにGitHubトークンをせっていしてね'); setGithubToken(); return; }
+
+  showToast('アップロードちゅう…');
+  try {
+    const res = await fetch('https://api.github.com/gists', {
+      method: 'POST',
+      headers: { 'Authorization': 'token ' + token, 'Accept': 'application/vnd.github+json' },
+      body: JSON.stringify({
+        description: 'ばめんクイズ',
+        public: true,
+        files: { 'quiz.json': { content: JSON.stringify(appData) } }
+      })
+    });
+    if (res.status === 401) {
+      localStorage.removeItem('gh_token');
+      showToast('トークンがちがうみたい。いれなおしてね');
+      setGithubToken();
+      return;
+    }
+    if (!res.ok) throw new Error('post failed');
+    const data = await res.json();
+    const base = location.origin + location.pathname;
+    const url = base + '#g=' + data.id;
+    showExportUrlScreen(url);
+  } catch (e) {
+    showToast('アップロードにしっぱい（ネットせつぞくをかくにん）');
+  }
+}
+
+function showExportUrlScreen(url) {
+  document.getElementById('export-url-text').value = url;
+  const info = document.getElementById('export-size-info');
+  info.innerHTML = 'みじかいURLができました ✅';
+  info.style.color = '#4caf50';
+  screenStack.push(showTeacherMode);
+  showScreen('export-screen', '🔗 URLをかきだす');
+}
+
+function copyExportUrl() {
+  const text = document.getElementById('export-url-text').value;
+  if (navigator.clipboard && navigator.clipboard.writeText) {
+    navigator.clipboard.writeText(text)
+      .then(() => showToast('コピーしました ✅'))
+      .catch(() => fallbackCopy());
+  } else {
+    fallbackCopy();
+  }
+  function fallbackCopy() {
+    const ta = document.getElementById('export-url-text');
+    ta.focus(); ta.select();
+    try { document.execCommand('copy'); showToast('コピーしました ✅'); }
+    catch (e) { showToast('てぶんでコピーしてね'); }
+  }
+}
+
+// ======== 問題編集フォーム ========
+function showEditForm(index) {
+  currentEditIndex = index;
+  screenStack.push(showTeacherMode);
+
+  const title = index === -1 ? '✏️ あたらしいもんだい' : `✏️ もんだい ${index + 1} をへんしゅう`;
+  document.getElementById('edit-screen-title').textContent = title;
+
+  // リセット
+  document.getElementById('scene-preview').style.display = 'none';
+  document.getElementById('scene-placeholder').style.display = 'flex';
+  document.getElementById('scene-file-input').value = '';
+  document.getElementById('question-title-input').value = '';
+
+  if (index !== -1) {
+    const q = appData.questions[index];
+    document.getElementById('question-title-input').value = q.title || '';
+    if (q.sceneImage) {
+      document.getElementById('scene-preview').src = q.sceneImage;
+      document.getElementById('scene-preview').style.display = 'block';
+      document.getElementById('scene-placeholder').style.display = 'none';
+    }
+    renderChoiceRows(q.choices, q.correctChoiceId);
+  } else {
+    renderChoiceRows([], null);
+  }
+
+  showScreen('edit-screen', title);
+}
+
+let choiceIdCounter = 100;
+
+function renderChoiceRows(choices, correctId) {
+  const container = document.getElementById('choices-container');
+  if (!choices || choices.length === 0) {
+    container.innerHTML = '';
+    addChoiceRow();
+    addChoiceRow();
+    return;
+  }
+  container.innerHTML = '';
+  choices.forEach(c => {
+    addChoiceRow(c.id, c.text, c.image, c.id === correctId);
+  });
+}
+
+function addChoiceRow(id = null, text = '', image = null, isCorrect = false) {
+  const container = document.getElementById('choices-container');
+  const rowId = id !== null ? id : ++choiceIdCounter;
+  const div = document.createElement('div');
+  div.className = 'choice-row';
+  div.dataset.choiceId = rowId;
+  div.innerHTML = `
+    <input type="radio" name="correct-choice" class="choice-correct-radio"
+      value="${rowId}" ${isCorrect ? 'checked' : ''}>
+    <div class="choice-image-thumb" id="cthumb-${rowId}">
+      ${image ? `<img src="${image}" alt="">` : '📷'}
+      <input type="file" accept="image/*" onchange="handleChoiceImageUpload(event, ${rowId})">
+    </div>
+    <input type="text" class="choice-text-input" placeholder="ことばをにゅうりょく"
+      value="${text}">
+    <button class="choice-remove-btn" onclick="removeChoiceRow(this)">✕</button>
+  `;
+  container.appendChild(div);
+}
+
+function removeChoiceRow(btn) {
+  const row = btn.closest('.choice-row');
+  const container = document.getElementById('choices-container');
+  if (container.querySelectorAll('.choice-row').length <= 1) {
+    showToast('せんたくしは1つ以上ひつようです');
+    return;
+  }
+  row.remove();
+}
+
+function triggerSceneUpload() {
+  document.getElementById('scene-file-input').click();
+}
+
+function handleSceneUpload(event) {
+  const file = event.target.files[0];
+  if (!file) return;
+  compressImage(file, 640, 0.6, (dataUrl) => {
+    document.getElementById('scene-preview').src = dataUrl;
+    document.getElementById('scene-preview').style.display = 'block';
+    document.getElementById('scene-placeholder').style.display = 'none';
+  });
+}
+
+function handleChoiceImageUpload(event, choiceId) {
+  const file = event.target.files[0];
+  if (!file) return;
+  compressImage(file, 240, 0.6, (dataUrl) => {
+    const thumb = document.getElementById(`cthumb-${choiceId}`);
+    thumb.innerHTML = `<img src="${dataUrl}" alt=""><input type="file" accept="image/*" onchange="handleChoiceImageUpload(event, ${choiceId})">`;
+    thumb.dataset.image = dataUrl;
+  });
+}
+
+// 画像を縮小・圧縮して base64(JPEG) を返す（URL配布サイズ対策）
+function compressImage(file, maxDim, quality, callback) {
+  const reader = new FileReader();
+  reader.onload = e => {
+    const img = new Image();
+    img.onload = () => {
+      let { width, height } = img;
+      if (width > height && width > maxDim) {
+        height = Math.round(height * maxDim / width); width = maxDim;
+      } else if (height >= width && height > maxDim) {
+        width = Math.round(width * maxDim / height); height = maxDim;
+      }
+      const canvas = document.createElement('canvas');
+      canvas.width = width; canvas.height = height;
+      const ctx = canvas.getContext('2d');
+      // 透過画像対策に白背景を敷いてから描画
+      ctx.fillStyle = '#ffffff';
+      ctx.fillRect(0, 0, width, height);
+      ctx.drawImage(img, 0, 0, width, height);
+      try {
+        callback(canvas.toDataURL('image/jpeg', quality));
+      } catch (err) {
+        callback(e.target.result); // 失敗時は元データ
+      }
+    };
+    img.onerror = () => callback(e.target.result);
+    img.src = e.target.result;
+  };
+  reader.readAsDataURL(file);
+}
+
+function saveQuestion() {
+  const sceneImg = document.getElementById('scene-preview').style.display !== 'none'
+    ? document.getElementById('scene-preview').src : null;
+
+  const choiceRows = document.querySelectorAll('#choices-container .choice-row');
+  if (choiceRows.length === 0) {
+    showToast('せんたくしをひとつはいれてね');
+    return;
+  }
+
+  const correctRadio = document.querySelector('input[name="correct-choice"]:checked');
+  if (!correctRadio) {
+    showToast('ただしいこたえをえらんでね（✅のチェック）');
+    return;
+  }
+
+  const choices = [];
+  let hasText = false;
+  choiceRows.forEach(row => {
+    const id = parseInt(row.dataset.choiceId);
+    const text = row.querySelector('.choice-text-input').value.trim();
+    const thumb = row.querySelector('.choice-image-thumb');
+    const img = thumb.querySelector('img') ? thumb.querySelector('img').src : (thumb.dataset.image || null);
+    choices.push({ id, text, image: img });
+    if (text) hasText = true;
+  });
+
+  if (!hasText && !choices.some(c => c.image)) {
+    showToast('せんたくしにことばかがぞうをいれてね');
+    return;
+  }
+
+  const titleInput = document.getElementById('question-title-input').value.trim();
+  const title = titleInput || choices.find(c => c.text)?.text || 'もんだい';
+
+  const question = {
+    id: Date.now(),
+    title,
+    sceneImage: sceneImg,
+    choices,
+    correctChoiceId: parseInt(correctRadio.value)
+  };
+
+  if (currentEditIndex === -1) {
+    appData.questions.push(question);
+  } else {
+    appData.questions[currentEditIndex] = question;
+  }
+  saveData(appData);
+
+  showToast('もんだいをほぞんしました ✅');
+  showTeacherMode();
+}
+
+// ======== クイズ選択 ========
+function showQuizSelect() {
+  // 配布コピーは先生モードへ戻れないように
+  screenStack = IS_DISTRIBUTED ? [] : [showHome];
+  const grid = document.getElementById('quiz-select-grid');
+  const qs = appData.questions;
+
+  if (qs.length === 0) {
+    grid.innerHTML = `<div class="empty-state" style="grid-column:1/-1">
+      <div class="empty-icon">📝</div>
+      <p>もんだいがありません<br>せんせいにつくってもらおう</p>
+    </div>`;
+  } else {
+    grid.innerHTML = qs.map((q, i) => {
+      const thumbHtml = q.sceneImage
+        ? `<div class="card-thumb"><img src="${q.sceneImage}" alt=""></div>`
+        : `<div class="card-thumb">🎭</div>`;
+      return `<div class="quiz-select-card" onclick="startQuestion(${i})">
+        ${thumbHtml}
+        <div class="card-num">もんだい ${i + 1}</div>
+        <div class="card-title">${q.title || 'もんだい'}</div>
+      </div>`;
+    }).join('');
+  }
+  showScreen('quiz-screen', '🌟 もんだいをえらぼう', !IS_DISTRIBUTED);
+}
+
+// ======== クイズ実行 ========
+function startQuestion(index) {
+  currentQuestionIndex = index;
+  selectedChoiceId = null;
+  screenStack.push(showQuizSelect);
+
+  const q = appData.questions[index];
+  const total = appData.questions.length;
+
+  // プログレスバー
+  document.getElementById('progress-fill').style.width = `${((index + 1) / total) * 100}%`;
+
+  // 場面画像
+  const sceneImg = document.getElementById('q-scene-img');
+  const sceneNoImg = document.getElementById('q-scene-no-img');
+  if (q.sceneImage) {
+    sceneImg.src = q.sceneImage;
+    sceneImg.style.display = 'block';
+    sceneNoImg.style.display = 'none';
+  } else {
+    sceneImg.style.display = 'none';
+    sceneNoImg.style.display = 'block';
+  }
+
+  // ドロップゾーンリセット
+  const dropZone = document.getElementById('drop-zone');
+  dropZone.classList.remove('has-item', 'over');
+  dropZone.innerHTML = '<span id="drop-hint">ここにドラッグしてね</span>';
+  selectedChoiceId = null;
+
+  // ボタンリセット
+  document.getElementById('check-btn').disabled = true;
+
+  // 選択肢をシャッフルして表示
+  const shuffled = [...q.choices].sort(() => Math.random() - 0.5);
+  const grid = document.getElementById('choices-grid');
+  grid.innerHTML = shuffled.map(c => {
+    const imgHtml = c.image ? `<img src="${c.image}" alt="" draggable="false">` : '';
+    const textHtml = c.text ? `<span>${c.text}</span>` : '';
+    return `<div class="choice-chip"
+      data-choice-id="${c.id}"
+      data-text="${c.text || ''}"
+      data-image="${c.image || ''}"
+      draggable="true">
+      ${imgHtml}${textHtml}
+    </div>`;
+  }).join('');
+
+  // ドラッグイベント設定
+  setupDragAndDrop();
+  showScreen('question-screen', `もんだい ${index + 1}`);
+}
+
+// ======== ドラッグ&ドロップ（タッチ対応） ========
+let dragChip = null;
+let ghost = document.getElementById('drag-ghost');
+
+function setupDragAndDrop() {
+  const chips = document.querySelectorAll('.choice-chip');
+  const dropZone = document.getElementById('drop-zone');
+
+  chips.forEach(chip => {
+    // PC用
+    chip.addEventListener('dragstart', onDragStart);
+    chip.addEventListener('dragend', onDragEnd);
+    // タッチ用
+    chip.addEventListener('touchstart', onTouchStart, { passive: false });
+    chip.addEventListener('touchmove', onTouchMove, { passive: false });
+    chip.addEventListener('touchend', onTouchEnd);
+  });
+
+  dropZone.addEventListener('dragover', e => {
+    e.preventDefault();
+    dropZone.classList.add('over');
+  });
+  dropZone.addEventListener('dragleave', () => dropZone.classList.remove('over'));
+  dropZone.addEventListener('drop', onDrop);
+}
+
+function onDragStart(e) {
+  dragChip = e.currentTarget;
+  dragChip.classList.add('dragging');
+  e.dataTransfer.effectAllowed = 'move';
+}
+
+function onDragEnd(e) {
+  if (dragChip) dragChip.classList.remove('dragging');
+  dragChip = null;
+}
+
+function onDrop(e) {
+  e.preventDefault();
+  const dropZone = document.getElementById('drop-zone');
+  dropZone.classList.remove('over');
+  if (dragChip) placeChip(dragChip);
+}
+
+let touchStartX, touchStartY;
+
+function onTouchStart(e) {
+  e.preventDefault();
+  dragChip = e.currentTarget;
+  const touch = e.touches[0];
+  touchStartX = touch.clientX;
+  touchStartY = touch.clientY;
+
+  ghost.style.display = 'flex';
+  updateGhost(dragChip);
+  moveGhost(touch.clientX, touch.clientY);
+  dragChip.classList.add('dragging');
+}
+
+function onTouchMove(e) {
+  e.preventDefault();
+  if (!dragChip) return;
+  const touch = e.touches[0];
+  moveGhost(touch.clientX, touch.clientY);
+
+  const dropZone = document.getElementById('drop-zone');
+  const rect = dropZone.getBoundingClientRect();
+  const inZone = touch.clientX >= rect.left && touch.clientX <= rect.right
+    && touch.clientY >= rect.top && touch.clientY <= rect.bottom;
+  if (inZone) dropZone.classList.add('over');
+  else dropZone.classList.remove('over');
+}
+
+function onTouchEnd(e) {
+  if (!dragChip) return;
+  ghost.style.display = 'none';
+  dragChip.classList.remove('dragging');
+
+  const touch = e.changedTouches[0];
+  const dropZone = document.getElementById('drop-zone');
+  const rect = dropZone.getBoundingClientRect();
+  const inZone = touch.clientX >= rect.left && touch.clientX <= rect.right
+    && touch.clientY >= rect.top && touch.clientY <= rect.bottom;
+
+  if (inZone) placeChip(dragChip);
+  dropZone.classList.remove('over');
+  dragChip = null;
+}
+
+function updateGhost(chip) {
+  const img = chip.dataset.image;
+  const text = chip.dataset.text;
+  ghost.innerHTML = (img ? `<img src="${img}" alt="">` : '') + (text ? `<span>${text}</span>` : '');
+}
+
+function moveGhost(x, y) {
+  ghost.style.left = x + 'px';
+  ghost.style.top = y + 'px';
+}
+
+function placeChip(chip) {
+  const choiceId = parseInt(chip.dataset.choiceId);
+  const text = chip.dataset.text;
+  const image = chip.dataset.image;
+  selectedChoiceId = choiceId;
+
+  // 以前の選択肢を元に戻す
+  document.querySelectorAll('.choice-chip.used').forEach(c => c.classList.remove('used'));
+  chip.classList.add('used');
+
+  // ドロップゾーンに表示
+  const dropZone = document.getElementById('drop-zone');
+  dropZone.classList.add('has-item');
+  const imgHtml = image ? `<img src="${image}" alt="">` : '';
+  const textHtml = text ? `<span>${text}</span>` : '';
+  dropZone.innerHTML = `<div class="dropped-chip">${imgHtml}${textHtml}</div>`;
+
+  document.getElementById('check-btn').disabled = false;
+}
+
+// ======== 答え合わせ ========
+function checkAnswer() {
+  if (selectedChoiceId === null) return;
+  const q = appData.questions[currentQuestionIndex];
+  const isCorrect = selectedChoiceId === q.correctChoiceId;
+  const chosen = q.choices.find(c => c.id === selectedChoiceId);
+  const correct = q.choices.find(c => c.id === q.correctChoiceId);
+
+  showResult(q, chosen, correct, isCorrect);
+}
+
+function showResult(q, chosen, correct, isCorrect) {
+  // 結果アイコン
+  document.getElementById('result-icon').textContent = isCorrect ? '⭐' : '😊';
+  const resultText = document.getElementById('result-text');
+  if (isCorrect) {
+    resultText.textContent = 'せいかい！ すごいね！';
+    resultText.className = 'badge-text correct-text';
+  } else {
+    resultText.textContent = 'もう一かいチャレンジしよう！';
+    resultText.className = 'badge-text wrong-text';
+  }
+
+  // 場面
+  const rsi = document.getElementById('result-scene-img');
+  const rsni = document.getElementById('result-scene-no-img');
+  if (q.sceneImage) {
+    rsi.src = q.sceneImage;
+    rsi.style.display = 'block';
+    rsni.style.display = 'none';
+  } else {
+    rsi.style.display = 'none';
+    rsni.style.display = 'block';
+  }
+
+  // 吹き出し
+  const bubble = document.getElementById('speech-bubble');
+  const speechText = document.getElementById('speech-text');
+  const speechImg = document.getElementById('speech-img');
+
+  speechText.textContent = chosen.text || '';
+  if (chosen.image) {
+    speechImg.src = chosen.image;
+    speechImg.style.display = 'inline-block';
+  } else {
+    speechImg.style.display = 'none';
+  }
+
+  if (isCorrect) {
+    bubble.className = 'speech-bubble correct-answer';
+    document.getElementById('correct-answer-row').style.display = 'none';
+  } else {
+    bubble.className = 'speech-bubble wrong-answer';
+    // 正解表示
+    const row = document.getElementById('correct-answer-row');
+    row.style.display = 'block';
+    const display = document.getElementById('correct-answer-display');
+    const imgHtml = correct.image ? `<img src="${correct.image}" alt="">` : '';
+    display.innerHTML = `${imgHtml}<span>${correct.text || ''}</span>`;
+  }
+
+  screenStack.push(() => startQuestion(currentQuestionIndex));
+  showScreen('result-screen', isCorrect ? '⭐ せいかい！' : '😊 けっか');
+}
+
+function retryQuestion() {
+  startQuestion(currentQuestionIndex);
+}
+
+// ======== ユーティリティ ========
+function showToast(msg) {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.classList.add('show');
+  setTimeout(() => t.classList.remove('show'), 2500);
+}
+
+// ======== 起動分岐 ========
+let IS_DISTRIBUTED = false;
+
+function enterStudentMode() {
+  IS_DISTRIBUTED = true;
+  document.querySelectorAll('.home-return-btn').forEach(b => b.style.display = 'none');
+  showQuizSelect();
+}
+
+async function loadFromGist(id) {
+  showScreen('loading-screen', 'よみこみちゅう', false);
+  try {
+    const res = await fetch('https://api.github.com/gists/' + id);
+    if (!res.ok) throw new Error('fetch failed');
+    const gist = await res.json();
+    const file = gist.files['quiz.json'] || Object.values(gist.files)[0];
+    let content = file.content;
+    if (file.truncated && file.raw_url) {
+      content = await (await fetch(file.raw_url)).text();
+    }
+    appData = JSON.parse(content);
+    enterStudentMode();
+  } catch (e) {
+    document.getElementById('loading-msg').innerHTML =
+      '😢 よみこめませんでした<br>ネットせつぞくをかくにんして<br>URLをひらきなおしてね';
+  }
+}
+
+(function init() {
+  const m = location.hash.match(/[#&]g=([0-9a-zA-Z]+)/);
+  if (m) {                          // 短いURL（GitHub Gist）から読み込む＝生徒
+    loadFromGist(m[1]);
+  } else if (window.EMBEDDED_DATA) { // data:URL 埋め込み（旧方式）＝生徒
+    appData = window.EMBEDDED_DATA;
+    enterStudentMode();
+  } else {                          // 通常起動＝先生/プレビュー
+    showHome();
+  }
+})();
+</script>
+</body>
+</html>
