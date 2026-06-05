@@ -940,6 +940,75 @@
       color: white;
     }
 
+    /* ======== ロールプレイ一覧 ======== */
+    .roleplay-list-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+      gap: 16px;
+    }
+    .rp-card {
+      background: white;
+      border-radius: 18px;
+      overflow: hidden;
+      box-shadow: 0 4px 14px rgba(0,0,0,0.1);
+      cursor: pointer;
+      border: 3px solid transparent;
+      transition: transform .1s, border-color .2s;
+    }
+    .rp-card:active { transform: scale(.97); border-color: #ff9a3c; }
+    .rp-card-scene {
+      position: relative;
+      aspect-ratio: 4/3;
+      background: #f0f0f0;
+      display: flex; align-items: center; justify-content: center;
+    }
+    .rp-card-scene img { width: 100%; height: 100%; object-fit: cover; }
+    .rp-card-scene .rp-noimg { font-size: 2.5rem; }
+    .rp-card-mark {
+      position: absolute; top: 6px; right: 8px;
+      font-size: 1.7rem;
+      filter: drop-shadow(0 1px 3px rgba(0,0,0,.35));
+    }
+    .rp-card-bubble {
+      padding: 10px 12px;
+      font-size: 1.05rem; font-weight: 700; color: #555;
+      display: flex; align-items: center; gap: 8px;
+      min-height: 50px;
+    }
+    .rp-card-bubble img { width: 36px; height: 36px; border-radius: 6px; object-fit: cover; }
+    .rp-card-num { font-size: .8rem; color: #aaa; text-align: center; padding-bottom: 10px; }
+    .rp-detail-scene-img { width: 100%; max-height: 48vh; object-fit: contain; border-radius: 14px; }
+
+    /* ======== 横画面（ランドスケープ）レイアウト ======== */
+    .q-layout { display: flex; flex-direction: column; }
+
+    @media (orientation: landscape) {
+      .screen { max-width: 1100px; }
+      .q-layout { flex-direction: row; gap: 24px; align-items: flex-start; }
+      .q-left { flex: 0 0 44%; }
+      .q-right { flex: 1; min-width: 0; }
+      .scene-container { margin-bottom: 0; }
+      .scene-img-wrap { max-height: 62vh; }
+      .scene-img-wrap img { max-height: 62vh; }
+      .drop-zone-area { margin-bottom: 18px; }
+      .roleplay-list-grid { grid-template-columns: repeat(auto-fill, minmax(180px, 1fr)); }
+    }
+
+    /* たてむきのときのヒント */
+    #rotate-hint { display: none; }
+    @media (orientation: portrait) {
+      #rotate-hint {
+        display: flex;
+        position: fixed; bottom: 14px; left: 50%;
+        transform: translateX(-50%);
+        background: #764ba2; color: white;
+        padding: 8px 18px; border-radius: 50px;
+        font-size: .85rem; font-weight: 700;
+        z-index: 5; align-items: center; gap: 6px; opacity: .92;
+        box-shadow: 0 4px 12px rgba(0,0,0,.2);
+      }
+    }
+
     /* セーフエリア対応 */
     @supports (padding-bottom: env(safe-area-inset-bottom)) {
       body { padding-bottom: env(safe-area-inset-bottom); }
@@ -959,6 +1028,9 @@
 
 <!-- トースト -->
 <div id="toast"></div>
+
+<!-- よこむきヒント -->
+<div id="rotate-hint">📱➡️ よこむきにするとつかいやすいよ</div>
 
 <!-- 削除確認モーダル -->
 <div id="modal-overlay">
@@ -983,7 +1055,7 @@
       <span class="btn-icon">🧑‍🏫</span>
       <span>せんせい</span>
     </button>
-    <button class="big-btn btn-student" onclick="showQuizSelect()">
+    <button class="big-btn btn-student" onclick="startQuiz()">
       <span class="btn-icon">🧒</span>
       <span>せいと（ためす）</span>
     </button>
@@ -1074,27 +1146,32 @@
   <div class="progress-bar">
     <div class="progress-fill" id="progress-fill" style="width:0%"></div>
   </div>
-  <div class="scene-container">
-    <div class="scene-label">📸 このばめんをみてね</div>
-    <div class="scene-img-wrap">
-      <img id="q-scene-img" src="" alt="" style="display:none">
-      <div class="scene-no-img" id="q-scene-no-img">🎭</div>
+  <div class="q-layout">
+    <div class="q-left">
+      <div class="scene-container">
+        <div class="scene-label">📸 このばめんをみてね</div>
+        <div class="scene-img-wrap">
+          <img id="q-scene-img" src="" alt="" style="display:none">
+          <div class="scene-no-img" id="q-scene-no-img">🎭</div>
+        </div>
+      </div>
+    </div>
+    <div class="q-right">
+      <div class="drop-zone-area">
+        <div class="drop-zone-label">⬇️ こたえをここにおとしてね</div>
+        <div class="drop-zone" id="drop-zone">
+          <span id="drop-hint">ここにドラッグしてね</span>
+        </div>
+      </div>
+
+      <div class="choices-label">👆 したからえらんでドラッグしよう</div>
+      <div class="choices-grid" id="choices-grid"></div>
+
+      <button class="check-btn" id="check-btn" onclick="checkAnswer()" disabled>
+        <span>✅</span> こたえをみる
+      </button>
     </div>
   </div>
-
-  <div class="drop-zone-area">
-    <div class="drop-zone-label">⬇️ こたえをここにおとしてね</div>
-    <div class="drop-zone" id="drop-zone">
-      <span id="drop-hint">ここにドラッグしてね</span>
-    </div>
-  </div>
-
-  <div class="choices-label">👆 したからえらんでドラッグしよう</div>
-  <div class="choices-grid" id="choices-grid"></div>
-
-  <button class="check-btn" id="check-btn" onclick="checkAnswer()" disabled>
-    <span>✅</span> こたえをみる
-  </button>
 </div>
 
 <!-- ======== 結果・ロールプレイ画面 ======== -->
@@ -1128,10 +1205,27 @@
   </div>
 
   <div class="result-buttons">
-    <button class="retry-btn" onclick="retryQuestion()">🔄 もういちどやる</button>
-    <button class="retry-btn" style="background: linear-gradient(135deg, #4ecdc4, #2bc0b4);" onclick="showQuizSelect()">📋 もんだいにもどる</button>
-    <button class="home-return-btn" onclick="showHome()">🏠 ホームにもどる</button>
+    <button class="retry-btn" id="result-next-btn" onclick="afterResultNext()">▶ つぎへ</button>
+    <button class="retry-btn" id="result-retry-btn" style="background: linear-gradient(135deg, #b0bec5, #90a4ae);" onclick="retryQuestion()">🔄 もういちど</button>
   </div>
+</div>
+
+<!-- ======== ロールプレイ一覧 ======== -->
+<div id="roleplay-list-screen" class="screen">
+  <div class="result-badge" style="margin-bottom:12px;">
+    <span class="badge-icon">🎉</span>
+    <div class="badge-text correct-text" id="rp-score-text"></div>
+  </div>
+  <div class="section-title" style="justify-content:center; font-size:1.2rem;">🎭 ロールプレイカード（タップでひらく）</div>
+  <div id="roleplay-list-grid" class="roleplay-list-grid"></div>
+  <button class="retry-btn" style="margin-top:24px;" onclick="restartQuiz()">🔄 もういちどさいしょから</button>
+  <button class="home-return-btn" style="margin-top:12px;" onclick="showHome()">🏠 ホームにもどる</button>
+</div>
+
+<!-- ======== ロールプレイ拡大（台本） ======== -->
+<div id="roleplay-detail-screen" class="screen">
+  <div id="roleplay-detail-content"></div>
+  <button class="retry-btn" style="margin-top:20px;" onclick="showRoleplayList()">📋 いちらんにもどる</button>
 </div>
 
 <script>
@@ -1154,6 +1248,34 @@ let currentEditIndex = -1; // -1 = 新規
 let currentQuestionIndex = 0;
 let selectedChoiceId = null;
 let deleteTargetIndex = -1;
+let sessionAnswers = []; // 各問の {chosenId, isCorrect}
+
+// ======== こうかおん（ピンポーン / ブー） ========
+let audioCtx = null;
+function playSound(correct) {
+  try {
+    audioCtx = audioCtx || new (window.AudioContext || window.webkitAudioContext)();
+    if (audioCtx.state === 'suspended') audioCtx.resume();
+    if (correct) {
+      beep(880, 0, 0.13);       // ピン
+      beep(1318.5, 0.14, 0.30); // ポーン
+    } else {
+      beep(190, 0, 0.5, 'square'); // ブー
+    }
+  } catch (e) {}
+}
+function beep(freq, delay, dur, type = 'sine') {
+  const t0 = audioCtx.currentTime + delay;
+  const osc = audioCtx.createOscillator();
+  const gain = audioCtx.createGain();
+  osc.type = type;
+  osc.frequency.value = freq;
+  gain.gain.setValueAtTime(0.0001, t0);
+  gain.gain.exponentialRampToValueAtTime(0.35, t0 + 0.02);
+  gain.gain.exponentialRampToValueAtTime(0.0001, t0 + dur);
+  osc.connect(gain); gain.connect(audioCtx.destination);
+  osc.start(t0); osc.stop(t0 + dur + 0.03);
+}
 
 // ======== 画面ナビ ========
 let screenStack = [];
@@ -1516,11 +1638,28 @@ function showQuizSelect() {
   showScreen('quiz-screen', '🌟 もんだいをえらぼう', !IS_DISTRIBUTED);
 }
 
-// ======== クイズ実行 ========
+// ======== クイズ実行（1から順に） ========
+function startQuiz() {
+  screenStack = IS_DISTRIBUTED ? [] : [showHome];
+  if (!appData.questions || appData.questions.length === 0) {
+    const grid = document.getElementById('quiz-select-grid');
+    grid.innerHTML = `<div class="empty-state" style="grid-column:1/-1">
+      <div class="empty-icon">📝</div>
+      <p>もんだいがありません<br>せんせいにつくってもらおう</p>
+    </div>`;
+    showScreen('quiz-screen', '🌟 クイズ', !IS_DISTRIBUTED);
+    return;
+  }
+  sessionAnswers = [];
+  currentQuestionIndex = 0;
+  startQuestion(0);
+}
+
+function restartQuiz() { startQuiz(); }
+
 function startQuestion(index) {
   currentQuestionIndex = index;
   selectedChoiceId = null;
-  screenStack.push(showQuizSelect);
 
   const q = appData.questions[index];
   const total = appData.questions.length;
@@ -1566,7 +1705,7 @@ function startQuestion(index) {
 
   // ドラッグイベント設定
   setupDragAndDrop();
-  showScreen('question-screen', `もんだい ${index + 1}`);
+  showScreen('question-screen', `もんだい ${index + 1} / ${total}`, false);
 }
 
 // ======== ドラッグ&ドロップ（タッチ対応） ========
@@ -1697,6 +1836,10 @@ function checkAnswer() {
   const chosen = q.choices.find(c => c.id === selectedChoiceId);
   const correct = q.choices.find(c => c.id === q.correctChoiceId);
 
+  // こたえを きろく ＆ こうかおん
+  sessionAnswers[currentQuestionIndex] = { chosenId: selectedChoiceId, isCorrect };
+  playSound(isCorrect);
+
   showResult(q, chosen, correct, isCorrect);
 }
 
@@ -1750,12 +1893,95 @@ function showResult(q, chosen, correct, isCorrect) {
     display.innerHTML = `${imgHtml}<span>${correct.text || ''}</span>`;
   }
 
-  screenStack.push(() => startQuestion(currentQuestionIndex));
-  showScreen('result-screen', isCorrect ? '⭐ せいかい！' : '😊 けっか');
+  // つぎへボタンのラベル（さいごの問題ならカード一覧へ）
+  const isLast = currentQuestionIndex >= appData.questions.length - 1;
+  document.getElementById('result-next-btn').textContent =
+    isLast ? '🎭 ぜんぶのカードをみる' : '▶ つぎのもんだいへ';
+
+  showScreen('result-screen', isCorrect ? '⭐ せいかい！' : '😊 けっか', false);
+}
+
+function afterResultNext() {
+  if (currentQuestionIndex >= appData.questions.length - 1) {
+    showRoleplayList();
+  } else {
+    startQuestion(currentQuestionIndex + 1);
+  }
 }
 
 function retryQuestion() {
   startQuestion(currentQuestionIndex);
+}
+
+// ======== ロールプレイ：カード一覧 ========
+function showRoleplayList() {
+  const qs = appData.questions;
+  const total = qs.length;
+  const correctCount = sessionAnswers.filter(a => a && a.isCorrect).length;
+  document.getElementById('rp-score-text').textContent =
+    `${total}もんちゅう ${correctCount}もん せいかい！`;
+
+  const grid = document.getElementById('roleplay-list-grid');
+  grid.innerHTML = qs.map((q, i) => {
+    const ans = sessionAnswers[i];
+    const chosen = ans ? q.choices.find(c => c.id === ans.chosenId) : null;
+    const sceneHtml = q.sceneImage
+      ? `<img src="${q.sceneImage}" alt="">`
+      : `<div class="rp-noimg">🎭</div>`;
+    const mark = ans ? (ans.isCorrect ? '⭕' : '❌') : '';
+    const ansImg = chosen && chosen.image ? `<img src="${chosen.image}" alt="">` : '';
+    const ansText = chosen ? (chosen.text || '') : '（みかいとう）';
+    return `<div class="rp-card" onclick="showRoleplayDetail(${i})">
+      <div class="rp-card-scene">${sceneHtml}<span class="rp-card-mark">${mark}</span></div>
+      <div class="rp-card-bubble">${ansImg}<span>${ansText}</span></div>
+      <div class="rp-card-num">もんだい ${i + 1}</div>
+    </div>`;
+  }).join('');
+
+  screenStack = IS_DISTRIBUTED ? [] : [showHome];
+  showScreen('roleplay-list-screen', '🎭 ロールプレイ', false);
+}
+
+// ======== ロールプレイ：拡大（台本） ========
+function showRoleplayDetail(i) {
+  const q = appData.questions[i];
+  const ans = sessionAnswers[i];
+  const chosen = ans ? q.choices.find(c => c.id === ans.chosenId) : null;
+  const correct = q.choices.find(c => c.id === q.correctChoiceId);
+  const isCorrect = ans && ans.isCorrect;
+
+  const sceneHtml = q.sceneImage
+    ? `<img src="${q.sceneImage}" class="rp-detail-scene-img" alt="">`
+    : `<div style="font-size:4rem; text-align:center; padding:20px;">🎭</div>`;
+  const chosenImg = chosen && chosen.image ? `<img src="${chosen.image}" alt="">` : '';
+  const correctRow = !isCorrect
+    ? `<div class="correct-answer-row" style="display:block;">
+         <div class="correct-answer-label">⭐ ただしいこたえ</div>
+         <div class="correct-answer-text">${correct.image ? `<img src="${correct.image}" alt="">` : ''}<span>${correct.text || ''}</span></div>
+       </div>`
+    : '';
+
+  document.getElementById('roleplay-detail-content').innerHTML = `
+    <div class="roleplay-card">
+      <div class="roleplay-header">🎭 ロールプレイのだいほん（もんだい ${i + 1}）</div>
+      <div class="roleplay-scene">
+        <div class="roleplay-scene-label">📸 ばめん</div>
+        ${sceneHtml}
+      </div>
+      <div class="roleplay-answer">
+        <div class="roleplay-answer-label">💬 こたえ（セリフ）</div>
+        <div class="roleplay-speech">
+          <div class="speech-avatar">🧑</div>
+          <div class="speech-bubble ${isCorrect ? 'correct-answer' : 'wrong-answer'}">
+            ${chosenImg}<span>${chosen ? (chosen.text || '') : '（みかいとう）'}</span>
+          </div>
+        </div>
+        ${correctRow}
+      </div>
+    </div>`;
+
+  screenStack = [showRoleplayList];
+  showScreen('roleplay-detail-screen', `🎭 もんだい ${i + 1}`, true);
 }
 
 // ======== ユーティリティ ========
@@ -1772,7 +1998,7 @@ let IS_DISTRIBUTED = false;
 function enterStudentMode() {
   IS_DISTRIBUTED = true;
   document.querySelectorAll('.home-return-btn').forEach(b => b.style.display = 'none');
-  showQuizSelect();
+  startQuiz();
 }
 
 async function loadFromGist(id) {
