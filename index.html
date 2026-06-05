@@ -521,6 +521,14 @@
       font-size: 4rem;
       color: #ccc;
     }
+    .scene-title {
+      font-size: 1.3rem;
+      font-weight: 900;
+      color: #555;
+      margin-top: 12px;
+      text-align: center;
+    }
+    .scene-title:empty { display: none; }
 
     /* ドロップゾーン */
     .drop-zone-area {
@@ -1154,6 +1162,7 @@
           <img id="q-scene-img" src="" alt="" style="display:none">
           <div class="scene-no-img" id="q-scene-no-img">🎭</div>
         </div>
+        <div class="scene-title" id="q-title"></div>
       </div>
     </div>
     <div class="q-right">
@@ -1666,6 +1675,9 @@ function startQuestion(index) {
 
   // プログレスバー
   document.getElementById('progress-fill').style.width = `${((index + 1) / total) * 100}%`;
+
+  // タイトル
+  document.getElementById('q-title').textContent = q.title || '';
 
   // 場面画像
   const sceneImg = document.getElementById('q-scene-img');
