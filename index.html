@@ -1269,7 +1269,9 @@ function playSound(correct) {
       beep(880, 0, 0.13);       // ピン
       beep(1318.5, 0.14, 0.30); // ポーン
     } else {
-      beep(190, 0, 0.5, 'square'); // ブー
+      beep(523, 0,    0.12, 'sawtooth'); // ブッ（高め）
+      beep(349, 0.13, 0.12, 'sawtooth'); // ブッ（中）
+      beep(220, 0.26, 0.28, 'sawtooth'); // ブーーン（低く伸びる）
     }
   } catch (e) {}
 }
@@ -1857,7 +1859,7 @@ function checkAnswer() {
 
 function showResult(q, chosen, correct, isCorrect) {
   // 結果アイコン
-  document.getElementById('result-icon').textContent = isCorrect ? '⭐' : '😊';
+  document.getElementById('result-icon').textContent = isCorrect ? '⭐' : '😔';
   const resultText = document.getElementById('result-text');
   if (isCorrect) {
     resultText.textContent = 'せいかい！ すごいね！';
